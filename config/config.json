@@ -1,0 +1,15 @@
+{
+    "start_text": "Wake up, Neo... \nThe Matrix has you... \nFollow the white rabbit. \n\nIt`s time to choose your side",
+    "start_photo": "images/LOGO.png",
+    "buttons": [
+        {"text": "Code", "callback_data": "Code"},
+        {"text": "Design", "callback_data": "Design"},
+        {"text": "Photo", "callback_data": "Photo"}
+    ],
+
+
+    "main_nav_keyboard": [
+        "Profile",
+        "TODO(InProgress)"
+    ]
+}
