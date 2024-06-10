@@ -1,2 +1,2 @@
 # WebMindStaffBot
-small bot for staff by WebMindStudio.
+small bot for staff by WebMindStudio
