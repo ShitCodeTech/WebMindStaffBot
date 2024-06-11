@@ -19,20 +19,11 @@ TOKEN = os.getenv('BOT_TOKEN')
 print(os.path.dirname(os.path.abspath(__file__)))
 with open(f'{os.path.dirname(os.path.abspath(__file__))}/config/config.json', 'r') as f:
     answers = json.load(f)
+dp = Dispatcher()
 bot = Bot(
     token=TOKEN,
     default=DefaultBotProperties(parse_mode=ParseMode.HTML)
     )
-dp = Dispatcher()
-
-
-class AccessLevel:
-    USER = 0
-    ADMIN = 1
-
-# States
-class AuthState(StatesGroup):
-    password = State()
 
 
 
@@ -61,11 +52,12 @@ keyboard = InlineKeyboardMarkup(inline_keyboard=[
 ])
 
 
+
 @dp.message(CommandStart())
 async def command_start_hadler(message: Message) -> None:
     await message.answer_photo(
         photo=FSInputFile(answers["start_photo"]),
-        caption=answers["start_text"],
+        caption=answers["start_text"] + '\n\nIt`s time to choose your side',
         reply_markup=keyboard
         )
 
@@ -75,17 +67,28 @@ async def command_start_hadler(message: Message) -> None:
 async def process_callback(callback_query: CallbackQuery):
     callback_data = callback_query.data
     await bot.answer_callback_query(callback_query.id)
-    await bot.send_message(callback_query.from_user.id, f'You choose: {callback_data}')
-    await bot.send_message(callback_query.from_user.id, "Time to set up your credentials\n\n How can i call you?")
-    await AuthState.password.set()
-
-@dp.message(state=AuthState.password)
-async def auth(message: Message, state: FSMContext):
-    user_id = message.from_user.id
-    password = message.text.strip()
-    print(user_id,password)
-
-
+    await bot.edit_message_caption( 
+        chat_id=callback_query.message.chat.id,
+        message_id=callback_query.message.message_id,
+        caption=f'{answers["start_text"]}\n\n <b>{callback_data}</b>',
+        parse_mode=ParseMode.HTML,
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+            InlineKeyboardButton(text='Next',callback_data='Next')])
+        )
+@dp.callback_query(Text(startswith="Next"))
+async def main_mode(callback_query: CallbackQuery):
+    bot.answer_callback_query(callback_query.id)
+    await bot.edit_message_caption( 
+        chat_id=callback_query.message.chat.id,
+        message_id=callback_query.message.message_id,
+        caption=None,
+        reply_markup=None
+        )
+    await bot.send_video(
+        chat_id=callback_query.message.chat.id,
+        video=FSInputFile('/home/killmilk/WM-dev/WebMindStaffBot/images/1.mp4'),
+        keyboard=answers["main_nav_keyboard"]
+    )
 
 async def main() -> None:
     await dp.start_polling(bot)
