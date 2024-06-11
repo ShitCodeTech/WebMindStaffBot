@@ -5,24 +5,35 @@ import asyncio
 import logging
 from dotenv import load_dotenv
 
-from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.enums import ParseMode
-from aiogram.types import FSInputFile, CallbackQuery
 from aiogram.filters import CommandStart
 from aiogram import Bot, Dispatcher, html
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State, StatesGroup
+from aiogram.types import FSInputFile, CallbackQuery
 from aiogram.client.default import DefaultBotProperties
-
-
+from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 
 load_dotenv()
 TOKEN = os.getenv('BOT_TOKEN')
-with open('config/config.json', 'r') as f:
+print(os.path.dirname(os.path.abspath(__file__)))
+with open(f'{os.path.dirname(os.path.abspath(__file__))}/config/config.json', 'r') as f:
     answers = json.load(f)
 bot = Bot(
     token=TOKEN,
     default=DefaultBotProperties(parse_mode=ParseMode.HTML)
     )
 dp = Dispatcher()
+
+
+class AccessLevel:
+    USER = 0
+    ADMIN = 1
+
+# States
+class AuthState(StatesGroup):
+    password = State()
+
 
 
 def useradd(uid, login, direction, passcode):
@@ -66,10 +77,10 @@ async def process_callback(callback_query: CallbackQuery):
     await bot.answer_callback_query(callback_query.id)
     await bot.send_message(callback_query.from_user.id, f'You choose: {callback_data}')
     await bot.send_message(callback_query.from_user.id, "Time to set up your credentials\n\n How can i call you?")
-    await YourStateName.password.set()
+    await AuthState.password.set()
 
-@dp.message_handler(state=YourStateName.password)
-async def auth(message: types.Message, state: FSMContext):
+@dp.message(state=AuthState.password)
+async def auth(message: Message, state: FSMContext):
     user_id = message.from_user.id
     password = message.text.strip()
     print(user_id,password)
