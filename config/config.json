@@ -1,6 +1,6 @@
 {
     "start_text": "Wake up, Neo... \nThe Matrix has you... \nFollow the white rabbit.",
-    "start_photo": "/home/killmilk/WM-dev/WebMindStaffBot/images/LOGO.png",
+    "start_photo": "/home/killmilk/WM-dev/WebMindStaffBot/images/2.jpg",
     "buttons": [
         {"text": "Code", "callback_data": "Code"},
         {"text": "Design", "callback_data": "Design"},
@@ -8,10 +8,12 @@
     ],
 
 
-    "main_nav_keyboard": [
-        "Profile",
-        "TODO(InProgress)",
-        "Settings",
-        "Load Avito"
-    ]
+    "main_keyboard": {
+        "left_part": [
+            {"text": "Profile", "callback_data": "profile"},
+            {"text": "TODO(InProgress)", "callback_data": "todo_web_app"}],
+        "right_part": [
+            {"text": "Settings", "callback_data": "settings"},
+            {"text": "Load Avito", "callback_data": "avito"}]
+    }
 }

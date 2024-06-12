@@ -7,12 +7,17 @@ from dotenv import load_dotenv
 
 from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart
-from aiogram import Bot, Dispatcher, html
 from aiogram.fsm.context import FSMContext
+from aiogram import Bot, Dispatcher, html, F
 from aiogram.fsm.state import State, StatesGroup
-from aiogram.types import FSInputFile, CallbackQuery
 from aiogram.client.default import DefaultBotProperties
-from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import FSInputFile, CallbackQuery, Message
+from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
+from aiogram.types import (
+    InlineKeyboardMarkup,InlineKeyboardButton,
+    ReplyKeyboardMarkup, ReplyKeyboardRemove,
+    KeyboardButton
+    )
 
 load_dotenv()
 TOKEN = os.getenv('BOT_TOKEN')
@@ -39,18 +44,22 @@ def useradd(uid, login, direction, passcode):
     with open('config/users.json','w') as users:
         json.dump(data, users)
 
-
+    
 def get_data(uid):
     with open('config/users.json','r') as ulist:
         users_data = json.load(ulist)
     return users_data.get(uid)
 
 
-keyboard = InlineKeyboardMarkup(inline_keyboard=[
+first_keyboard = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text=button["text"], 
-    callback_data=button["callback_data"]) for button in answers["buttons"]]
-])
+    callback_data=button["callback_data"]) for button in answers["buttons"]]])
 
+main_keyboard = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(text=button["text"], 
+    callback_data=button["callback_data"]) for button in answers["main_keyboard"]["left_part"]],
+    [InlineKeyboardButton(text=button["text"], 
+    callback_data=button["callback_data"]) for button in answers["main_keyboard"]["right_part"]]])
 
 
 @dp.message(CommandStart())
@@ -58,7 +67,7 @@ async def command_start_hadler(message: Message) -> None:
     await message.answer_photo(
         photo=FSInputFile(answers["start_photo"]),
         caption=answers["start_text"] + '\n\nIt`s time to choose your side',
-        reply_markup=keyboard
+        reply_markup=first_keyboard
         )
 
 
@@ -66,29 +75,37 @@ async def command_start_hadler(message: Message) -> None:
 @dp.callback_query(lambda c: c.data in [button["callback_data"] for button in answers["buttons"]])
 async def process_callback(callback_query: CallbackQuery):
     callback_data = callback_query.data
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(
+        text="Next",
+        callback_data="next")
+    )
     await bot.answer_callback_query(callback_query.id)
     await bot.edit_message_caption( 
         chat_id=callback_query.message.chat.id,
         message_id=callback_query.message.message_id,
         caption=f'{answers["start_text"]}\n\n <b>{callback_data}</b>',
         parse_mode=ParseMode.HTML,
-        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-            InlineKeyboardButton(text='Next',callback_data='Next')])
+        reply_markup=builder.as_markup()
         )
-@dp.callback_query(Text(startswith="Next"))
+    
+
+
+
+
+@dp.callback_query(F.data == "next")
 async def main_mode(callback_query: CallbackQuery):
-    bot.answer_callback_query(callback_query.id)
-    await bot.edit_message_caption( 
+    await bot.delete_message( 
         chat_id=callback_query.message.chat.id,
-        message_id=callback_query.message.message_id,
-        caption=None,
-        reply_markup=None
+        message_id=callback_query.message.message_id
         )
-    await bot.send_video(
+    
+    await bot.send_animation(
         chat_id=callback_query.message.chat.id,
-        video=FSInputFile('/home/killmilk/WM-dev/WebMindStaffBot/images/1.mp4'),
-        keyboard=answers["main_nav_keyboard"]
+        animation=FSInputFile('/home/killmilk/WM-dev/WebMindStaffBot/images/1.mp4'),
+        reply_markup=main_keyboard
     )
+    
 
 async def main() -> None:
     await dp.start_polling(bot)
